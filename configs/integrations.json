@@ -1,0 +1,142 @@
+{
+  "ollama": {
+    "enabled": true,
+    "base_url": "http://127.0.0.1:11434",
+    "model": "gemma4:e4b",
+    "embedding_model": "nomic-embed-text",
+    "timeout_seconds": 60
+  },
+  "llm_router": {
+    "active_provider": "ollama",
+    "providers": {
+      "ollama": {
+        "label": "本地 Ollama",
+        "type": "ollama",
+        "base_url": "http://127.0.0.1:11434",
+        "model": "gemma4:e4b",
+        "api_key_required": false
+      },
+      "deepseek": {
+        "label": "DeepSeek",
+        "type": "openai_compatible",
+        "base_url": "https://api.deepseek.com",
+        "model": "deepseek-chat",
+        "api_key_required": true
+      },
+      "kimi": {
+        "label": "Kimi / Moonshot",
+        "type": "openai_compatible",
+        "base_url": "https://api.moonshot.ai/v1",
+        "model": "kimi-latest",
+        "api_key_required": true
+      },
+      "qwen": {
+        "label": "Qwen / DashScope",
+        "type": "openai_compatible",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "model": "qwen-plus",
+        "api_key_required": true
+      },
+      "mimo": {
+        "label": "MiMo / 自定义兼容接口",
+        "type": "openai_compatible",
+        "base_url": "",
+        "model": "",
+        "api_key_required": true
+      },
+      "openrouter": {
+        "label": "OpenRouter / 中转站",
+        "type": "openai_compatible",
+        "base_url": "https://openrouter.ai/api/v1",
+        "model": "deepseek/deepseek-chat",
+        "api_key_required": true
+      },
+      "custom": {
+        "label": "自定义 OpenAI 兼容接口",
+        "type": "openai_compatible",
+        "base_url": "",
+        "model": "",
+        "api_key_required": true
+      }
+    }
+  },
+  "obs": {
+    "websocket_url": "ws://127.0.0.1:4455",
+    "overlay_source_name": "AI字幕和合规角标",
+    "overlay_url": "http://127.0.0.1:8787/overlay"
+  },
+  "digital_human": {
+    "status": "not_connected",
+    "preferred": "Duix Avatar / HeyGem successor",
+    "notes": "Needs Docker Desktop before local avatar service can be connected."
+  },
+  "tts": {
+    "status": "placeholder",
+    "active_provider": "windows_sapi",
+    "rate": 0,
+    "volume": 100,
+    "preferred": "GPT-SoVITS or CosyVoice",
+    "notes": "Start with placeholder/system voice, then connect cloned Aoao voice.",
+    "providers": {
+      "windows_sapi": {
+        "label": "Windows 系统语音",
+        "type": "windows_sapi",
+        "base_url": "",
+        "model": "",
+        "voice": "",
+        "api_key_required": false,
+        "extra": {}
+      },
+      "gpt_sovits": {
+        "label": "本地 GPT-SoVITS",
+        "type": "gpt_sovits_api",
+        "base_url": "http://127.0.0.1:9880",
+        "model": "",
+        "voice": "",
+        "api_key_required": false,
+        "extra": {
+          "ref_audio_path": "",
+          "prompt_text": "",
+          "text_lang": "zh",
+          "prompt_lang": "zh",
+          "text_split_method": "cut5",
+          "batch_size": 1,
+          "media_type": "wav",
+          "streaming_mode": false
+        }
+      },
+      "minimax": {
+        "label": "MiniMax T2A",
+        "type": "minimax_t2a",
+        "base_url": "https://api.minimax.io/v1/t2a_v2",
+        "model": "speech-2.8-hd",
+        "voice": "",
+        "api_key_required": true
+      },
+      "mimo": {
+        "label": "MiMo TTS",
+        "type": "openai_audio_speech",
+        "base_url": "https://api.mimo-v2.com/v1",
+        "model": "mimo-v2-tts",
+        "voice": "default",
+        "api_key_required": true
+      },
+      "custom_openai": {
+        "label": "自定义 OpenAI 兼容语音",
+        "type": "openai_audio_speech",
+        "base_url": "",
+        "model": "",
+        "voice": "",
+        "api_key_required": true
+      },
+      "custom_http": {
+        "label": "自定义 HTTP TTS",
+        "type": "http_audio_or_json",
+        "base_url": "",
+        "model": "",
+        "voice": "",
+        "api_key_required": false
+      }
+    }
+  }
+}

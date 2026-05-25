@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+data/*.db
+data/tts/
+logs/*.log
+configs/secrets.local.json
+.claude/settings.local.json
+vendor/GPT-SoVITS/
+vendor/*.exe
+installer/Miniforge3-Windows-x86_64.exe

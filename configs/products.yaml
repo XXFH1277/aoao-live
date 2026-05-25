@@ -1,0 +1,33 @@
+products:
+  - id: zhoushan-seafood-gift
+    name: 舟山海鲜礼盒 Demo
+    status: demo
+    audience: 家庭聚餐、节日送礼、本地特产尝鲜
+    selling_points:
+      - 舟山海产场景，适合做本地化直播样板
+      - 话术重点放在规格、发货时间、保存方式，不做夸大承诺
+      - 可搭配短视频素材引流
+    safe_claims:
+      - 下单前请看清规格、重量、发货地和售后规则
+      - 生鲜类商品受天气、物流和季节影响，发货时间以店铺页面为准
+      - 口味感受因人而异，建议按需选择
+    risky_claims:
+      - 全网最低
+      - 包治百病
+      - 绝对新鲜
+      - 永不翻车
+  - id: putuoshan-travel-demo
+    name: 舟山文旅线路 Demo
+    status: demo
+    audience: 周末游、家庭游、民宿咨询
+    selling_points:
+      - 适合验证文旅问答和真人助理接管
+      - 重点回答路线、天气、交通、入住规则
+      - 不替代官方公告和商家最终确认
+    safe_claims:
+      - 航班、船班、景区开放情况以官方当天公告为准
+      - 价格和房态请以客服确认为准
+    risky_claims:
+      - 保证有票
+      - 保证不排队
+      - 内部渠道

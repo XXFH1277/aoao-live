@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>螯螯 OBS Overlay</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="badge" class="badge">AI 主播 / AI 生成</div>
+  <div class="assist">真人助理监管中</div>
+  <div class="caption-wrap">
+    <div class="speaker">螯螯</div>
+    <div id="caption" class="caption">正在连接控制台...</div>
+  </div>
+
+  <script>
+    const API_BASE = location.origin;
+    const captionEl = document.getElementById("caption");
+    const badgeEl = document.getElementById("badge");
+
+    function connectWS() {
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      const ws = new WebSocket(`${protocol}//${location.host}/ws`);
+
+      ws.onopen = () => {
+        captionEl.textContent = "已连接，等待话术...";
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.data && msg.data.current_line) {
+            captionEl.textContent = msg.data.current_line;
+          }
+          if (msg.data && msg.data.visible_label) {
+            badgeEl.textContent = msg.data.visible_label;
+          }
+          if (msg.event === "danmaku_reply" && msg.data && msg.data.answer) {
+            captionEl.textContent = msg.data.answer;
+          }
+          if (msg.event === "tts_audio" && msg.data && msg.data.audio_url) {
+            if (!window._ttsQueue) window._ttsQueue = [];
+            if (!window._ttsPlaying) window._ttsPlaying = false;
+            if (!window._ttsAudio) {
+              window._ttsAudio = new Audio();
+              window._ttsAudio.addEventListener("ended", function() {
+                window._ttsPlaying = false;
+                if (window._ttsQueue.length > 0) {
+                  var next = window._ttsQueue.shift();
+                  window._ttsAudio.src = next;
+                  window._ttsPlaying = true;
+                  window._ttsAudio.play().catch(function() { window._ttsPlaying = false; });
+                }
+              });
+              window._ttsAudio.addEventListener("error", function() {
+                window._ttsPlaying = false;
+                if (window._ttsQueue.length > 0) {
+                  var next = window._ttsQueue.shift();
+                  window._ttsAudio.src = next;
+                  window._ttsPlaying = true;
+                  window._ttsAudio.play().catch(function() { window._ttsPlaying = false; });
+                }
+              });
+            }
+            if (!window._ttsPlaying) {
+              window._ttsAudio.src = msg.data.audio_url;
+              window._ttsPlaying = true;
+              window._ttsAudio.play().catch(function() { window._ttsPlaying = false; });
+            } else {
+              window._ttsQueue.push(msg.data.audio_url);
+            }
+          }
+        } catch (e) {}
+      };
+
+      ws.onclose = () => {
+        captionEl.textContent = "连接断开，5秒后重连...";
+        setTimeout(connectWS, 5000);
+      };
+
+      ws.onerror = () => ws.close();
+    }
+
+    // Fallback: if WebSocket fails, poll the API
+    let wsSupported = true;
+    try {
+      connectWS();
+    } catch (e) {
+      wsSupported = false;
+    }
+
+    if (!wsSupported) {
+      setInterval(async () => {
+        try {
+          const resp = await fetch(`${API_BASE}/api/v1/state`);
+          const state = await resp.json();
+          captionEl.textContent = state.current_line || "";
+          badgeEl.textContent = state.visible_label || "AI 主播 / AI 生成";
+        } catch (e) {}
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

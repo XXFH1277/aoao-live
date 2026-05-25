@@ -1,0 +1,8 @@
+小米mimoapi：tp-cxkvo6jua1gjdsl25hqatatdjz0yuipmkuoebbhxyhquj5ro
+Compatible with OpenAI API protocol:https://token-plan-cn.xiaomimimo.com/v1
+Compatible with Anthropic API protocol:https://token-plan-cn.xiaomimimo.com/anthropic
+MiMo-V2.5-Pro, MiMo-V2.5, MiMo-V2.5-TTS-VoiceClone, MiMo-V2.5-TTS-VoiceDesign、MiMo-V2.5-TTS, MiMo-V2-Pro, MiMo-V2-Omni, MiMo-V2-TTS
+
+
+kimi api：sk-WeRD5RtWOouV47BH0hcnfCMiEtKaCvVh0VPY6oLKDiapVtlU
+推荐使用kimi 2.6模型
