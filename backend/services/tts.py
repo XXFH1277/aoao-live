@@ -81,10 +81,10 @@ class TTSService:
             "mimo",
             {
                 "label": "MiMo TTS",
-                "type": "openai_audio_speech",
-                "base_url": "https://api.mimo-v2.com/v1",
-                "model": "mimo-v2-tts",
-                "voice": "default",
+                "type": "mimo_tts_chat",
+                "base_url": "https://token-plan-cn.xiaomimimo.com/v1",
+                "model": "mimo-v2.5-tts",
+                "voice": "mimo_default",
                 "api_key_required": True,
             },
         )
@@ -268,6 +268,8 @@ class TTSService:
             return await self._speak_gpt_sovits(text, provider_id, provider_cfg, selected_voice)
         if provider_type == "openai_audio_speech":
             return await self._speak_openai_audio(text, provider_id, provider_cfg, selected_voice)
+        if provider_type == "mimo_tts_chat":
+            return await self._speak_mimo_tts_chat(text, provider_id, provider_cfg, selected_voice)
         if provider_type == "http_audio_or_json":
             return await self._speak_http(text, provider_id, provider_cfg, selected_voice)
         return await self._speak_windows_sapi(text, selected_voice, selected_rate, selected_volume)
@@ -423,6 +425,55 @@ class TTSService:
         except Exception as exc:
             return {"ok": False, "provider": provider_id, "error": str(exc)}
         result = self._write_audio(audio, ".mp3")
+        return {"ok": True, "provider": provider_id, "text": text, **result}
+
+    async def _speak_mimo_tts_chat(self, text: str, provider_id: str, provider: dict[str, Any], voice: str) -> dict[str, Any]:
+        api_key = self.api_key_for(provider_id)
+        if not api_key:
+            return {"ok": False, "provider": provider_id, "error": "missing_api_key"}
+        base_url = str(provider.get("base_url", "")).rstrip("/")
+        model = str(provider.get("model", "")).strip()
+        if not base_url or not model:
+            return {"ok": False, "provider": provider_id, "error": "missing_base_url_or_model"}
+        voice_id = voice or "mimo_default"
+        body = {
+            "model": model,
+            "messages": [
+                {"role": "user", "content": "用亲切自然的中文电商主播语气播报。"},
+                {"role": "assistant", "content": text},
+            ],
+            "audio": {"format": "wav", "voice": voice_id},
+        }
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{base_url}/chat/completions",
+                    json=body,
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "api-key": api_key,
+                        "Content-Type": "application/json",
+                    },
+                    timeout=aiohttp.ClientTimeout(total=90),
+                ) as resp:
+                    try:
+                        data = await resp.json()
+                    except Exception:
+                        data = {"raw": (await resp.text())[:500]}
+                    if resp.status >= 400:
+                        return {"ok": False, "provider": provider_id, "error": str(data)[:500], "http_status": resp.status}
+        except Exception as exc:
+            return {"ok": False, "provider": provider_id, "error": str(exc)}
+
+        message = data.get("choices", [{}])[0].get("message", {})
+        audio_data = (message.get("audio") or {}).get("data", "")
+        if not audio_data:
+            return {"ok": False, "provider": provider_id, "error": str(data)[:500]}
+        try:
+            audio = base64.b64decode(audio_data)
+        except Exception:
+            return {"ok": False, "provider": provider_id, "error": "invalid_base64_audio"}
+        result = self._write_audio(audio, ".wav")
         return {"ok": True, "provider": provider_id, "text": text, **result}
 
     async def _speak_gpt_sovits(self, text: str, provider_id: str, provider: dict[str, Any], voice: str) -> dict[str, Any]:

@@ -81,7 +81,7 @@ async def upload_voice_sample(file: UploadFile = File(...)) -> dict:
     """Upload a reference audio file for voice cloning (GPT-SoVITS)."""
     VOICE_SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
     # Validate file type
-    allowed = {".wav", ".mp3", ".ogg", ".flac", ".m4a"}
+    allowed = {".wav", ".mp3", ".ogg", ".flac", ".m4a", ".webm"}
     ext = Path(file.filename or "sample.wav").suffix.lower()
     if ext not in allowed:
         return {"ok": False, "error": f"不支持的文件格式: {ext}，请上传 WAV/MP3/OGG/FLAC/M4A"}

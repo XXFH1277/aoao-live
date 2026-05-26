@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import aiohttp
@@ -72,6 +73,68 @@ class LLMRouter:
             secrets = load_json(SECRETS_PATH) or {"llm_api_keys": {}}
             secrets.setdefault("llm_api_keys", {})[provider_id] = api_key
             save_json(SECRETS_PATH, secrets)
+
+    async def test_provider(self, prompt: str, persona: dict, provider_id: str = "") -> dict[str, Any]:
+        target_provider_id = provider_id or self.active_provider_id()
+        provider = self.router_config().get("providers", {}).get(target_provider_id, {})
+        started_at = time.time()
+        if provider.get("type") == "openai_compatible":
+            result = await self._test_openai_compatible(prompt, target_provider_id, provider, persona)
+        else:
+            answer = await self._ask_ollama(prompt, persona)
+            result = {"ok": bool(answer), "answer": answer, "error": "" if answer else "本地 Ollama 未返回可用回复。"}
+        latency_ms = int((time.time() - started_at) * 1000)
+        return {
+            "ok": bool(result.get("ok")),
+            "provider_id": target_provider_id,
+            "provider_label": provider.get("label", target_provider_id),
+            "model": provider.get("model", ""),
+            "latency_ms": latency_ms,
+            "answer": result.get("answer", ""),
+            "error": result.get("error", ""),
+            "http_status": result.get("http_status"),
+        }
+
+    async def _test_openai_compatible(self, prompt: str, provider_id: str, provider: dict, persona: dict) -> dict[str, Any]:
+        base_url = provider.get("base_url", "").rstrip("/")
+        model = provider.get("model", "")
+        api_key = self.api_key_for(provider_id)
+        if not base_url or not model or not api_key:
+            return {"ok": False, "error": "缺少 Base URL、模型名或 API Key。"}
+
+        messages = self._build_chat_messages(prompt, [], persona)
+        body: dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.4,
+            "max_tokens": 512,
+            "stream": False,
+        }
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{base_url}/chat/completions",
+                    json=body,
+                    headers={"Authorization": f"Bearer {api_key}"},
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as resp:
+                    status = resp.status
+                    try:
+                        payload = await resp.json()
+                    except Exception:
+                        payload = {"raw": (await resp.text())[:500]}
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+
+        if status >= 400:
+            return {"ok": False, "http_status": status, "error": str(payload)[:500]}
+        answer = str(payload.get("choices", [{}])[0].get("message", {}).get("content", "")).strip().replace("\n", " ")
+        answer = self.guardrails.clean_reply(answer)
+        if not answer:
+            return {"ok": False, "http_status": status, "error": str(payload)[:500]}
+        if self.guardrails.scan_warning(answer):
+            return {"ok": False, "http_status": status, "error": "回复命中风控规则，已拦截。"}
+        return {"ok": True, "http_status": status, "answer": answer[:160]}
 
     async def ollama_status(self) -> dict:
         config = self.ollama_config()
@@ -184,7 +247,7 @@ class LLMRouter:
             "model": model,
             "messages": messages,
             "temperature": 0.4,
-            "max_tokens": 120,
+            "max_tokens": 512,
             "stream": False,
         }
         try:

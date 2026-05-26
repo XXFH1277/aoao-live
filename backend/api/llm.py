@@ -20,10 +20,23 @@ class ProviderUpdateRequest(BaseModel):
     api_key: str = ""
 
 
+class LLMTestRequest(BaseModel):
+    prompt: str = "你好，介绍一下你是谁。"
+    provider_id: str = ""
+
+
 @router.put("/provider")
 async def update_provider(req: ProviderUpdateRequest) -> dict:
     await _state.update_llm_provider(req.provider_id, req.base_url, req.model, req.api_key)
     return {"ok": True, "provider_id": req.provider_id}
+
+
+@router.post("/test")
+async def test_provider(req: LLMTestRequest) -> dict:
+    prompt = req.prompt.strip()
+    if not prompt:
+        return {"ok": False, "error": "empty_prompt"}
+    return await _state.test_llm_provider(prompt, req.provider_id)
 
 
 @router.get("/status")

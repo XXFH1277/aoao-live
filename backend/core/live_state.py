@@ -159,6 +159,12 @@ class LiveState:
         self.llm_router.update_provider(provider_id, base_url, model, api_key)
         log_interaction("system", f"模型供应商已切换：{provider_id} / {model or '沿用原模型'}", "", "model", "handled")
 
+    async def test_llm_provider(self, prompt: str, provider_id: str = "") -> dict:
+        result = await self.llm_router.test_provider(prompt, self.persona, provider_id)
+        status = "handled" if result.get("ok") else "handoff"
+        log_interaction("llm_test", prompt, result.get("answer", result.get("error", "")), result.get("provider_id", ""), status)
+        return result
+
     async def update_persona(self, positioning: str, tone: str, rules_text: str, max_chars: str, max_sentences: str) -> None:
         if positioning:
             self.persona["positioning"] = positioning

@@ -7,7 +7,7 @@
     "timeout_seconds": 60
   },
   "llm_router": {
-    "active_provider": "ollama",
+    "active_provider": "mimo",
     "providers": {
       "ollama": {
         "label": "本地 Ollama",
@@ -27,7 +27,7 @@
         "label": "Kimi / Moonshot",
         "type": "openai_compatible",
         "base_url": "https://api.moonshot.ai/v1",
-        "model": "kimi-latest",
+        "model": "kimi-k2-0711-preview",
         "api_key_required": true
       },
       "qwen": {
@@ -38,10 +38,10 @@
         "api_key_required": true
       },
       "mimo": {
-        "label": "MiMo / 自定义兼容接口",
+        "label": "MiMo / 小米兼容接口",
         "type": "openai_compatible",
-        "base_url": "",
-        "model": "",
+        "base_url": "https://token-plan-cn.xiaomimimo.com/v1",
+        "model": "mimo-v2.5-pro",
         "api_key_required": true
       },
       "openrouter": {
@@ -72,7 +72,7 @@
   },
   "tts": {
     "status": "placeholder",
-    "active_provider": "windows_sapi",
+    "active_provider": "mimo",
     "rate": 0,
     "volume": 100,
     "preferred": "GPT-SoVITS or CosyVoice",
@@ -115,11 +115,12 @@
       },
       "mimo": {
         "label": "MiMo TTS",
-        "type": "openai_audio_speech",
-        "base_url": "https://api.mimo-v2.com/v1",
-        "model": "mimo-v2-tts",
-        "voice": "default",
-        "api_key_required": true
+        "type": "mimo_tts_chat",
+        "base_url": "https://token-plan-cn.xiaomimimo.com/v1",
+        "model": "mimo-v2.5-tts",
+        "voice": "mimo_default",
+        "api_key_required": true,
+        "extra": {}
       },
       "custom_openai": {
         "label": "自定义 OpenAI 兼容语音",

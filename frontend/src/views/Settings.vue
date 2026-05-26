@@ -13,6 +13,13 @@ const form = ref({
   api_key: '',
 })
 
+const testForm = ref({
+  prompt: '粉丝问：这个海鲜礼盒适合送长辈吗？请用主播口吻回答。',
+})
+const llmTesting = ref(false)
+const llmTestResult = ref<Record<string, any> | null>(null)
+const llmTestError = ref('')
+
 const providers = computed(() => store.providers)
 const activeId = computed(() => store.activeProviderId)
 const activeProvider = computed(() => providers.value[activeId.value] ?? {})
@@ -33,6 +40,28 @@ onMounted(() => {
 
 async function saveProvider() {
   await store.updateLlmProvider(form.value)
+}
+
+async function testProvider() {
+  llmTesting.value = true
+  llmTestResult.value = null
+  llmTestError.value = ''
+  try {
+    await saveProvider()
+    const result = await store.testLlmProvider({
+      provider_id: form.value.provider_id,
+      prompt: testForm.value.prompt,
+    })
+    if (!result.ok) {
+      llmTestError.value = result.error || '模型测试失败'
+      return
+    }
+    llmTestResult.value = result
+  } catch (error) {
+    llmTestError.value = error instanceof Error ? error.message : String(error)
+  } finally {
+    llmTesting.value = false
+  }
 }
 
 const apiKeyStatus = computed(() => {
@@ -110,8 +139,37 @@ const providerTypeLabel = computed(() => {
           </div>
         </form>
 
+        <div class="mt-3 border border-[#dce6e2] rounded-lg p-3 bg-[#fbfcfb]">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h3 class="m-0 text-[15px] font-bold">API 连通测试</h3>
+            <span class="text-muted text-xs">保存配置后立即请求当前供应商</span>
+          </div>
+          <textarea
+            v-model="testForm.prompt"
+            class="w-full min-h-[86px] mt-2 border border-[#c8d4cf] rounded-md p-2.5 font-[inherit] text-sm"
+            placeholder="输入一条弹幕或测试问题"
+          />
+          <div class="flex items-center gap-2 mt-2 flex-wrap">
+            <button
+              type="button"
+              @click="testProvider"
+              :disabled="llmTesting"
+              class="px-3 py-2 rounded-md font-bold text-white bg-[#42a63f] border-0 cursor-pointer text-sm disabled:opacity-60"
+            >
+              {{ llmTesting ? '测试中...' : '测试 LLM API' }}
+            </button>
+            <span v-if="llmTestResult" class="rounded-full px-2 py-1 text-xs font-bold bg-green-soft text-green">
+              {{ llmTestResult.provider_label }} · {{ llmTestResult.latency_ms }}ms
+            </span>
+          </div>
+          <div v-if="llmTestError" class="mt-2 text-coral text-[13px] leading-normal">{{ llmTestError }}</div>
+          <div v-if="llmTestResult?.answer" class="mt-2 p-2.5 rounded-md bg-[#f1f6f3] text-[#22342f] text-[13px] leading-[1.55]">
+            {{ llmTestResult.answer }}
+          </div>
+        </div>
+
         <div class="mt-3 p-2.5 rounded-lg bg-[#f1f6f3] text-[#4d5e58] text-[13px] leading-[1.55]">
-          后续接 DeepSeek、Kimi、Qwen、MiMo 或中转站，只要它是 OpenAI 兼容的 <code class="bg-[#edf2ef] px-1.5 py-0.5 rounded text-sm">/chat/completions</code> 接口，就能走这里。
+          本阶段优先走云端 API：Kimi、MiMo、DeepSeek、Qwen 或中转站只要兼容 <code class="bg-[#edf2ef] px-1.5 py-0.5 rounded text-sm">/chat/completions</code>，就能直接在这里配置和测试；本地 Ollama 作为不稳定部署时的备用项。
         </div>
       </div>
 

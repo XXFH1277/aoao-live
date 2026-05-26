@@ -173,6 +173,10 @@ export const useLiveStore = defineStore('live', () => {
     await fetchState()
   }
 
+  async function testLlmProvider(data: Record<string, any>) {
+    return await api<any>('/api/v1/llm/test', { method: 'POST', body: JSON.stringify(data) })
+  }
+
   async function updatePersona(data: Record<string, any>) {
     await api('/api/v1/persona', { method: 'PUT', body: JSON.stringify(data) })
     await fetchPersona()
@@ -235,6 +239,7 @@ export const useLiveStore = defineStore('live', () => {
     sendDanmaku,
     sendAssistantReply,
     updateLlmProvider,
+    testLlmProvider,
     updatePersona,
     addKnowledge,
     rebuildRag,
